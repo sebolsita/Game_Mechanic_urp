@@ -62,6 +62,14 @@ namespace starskyproductions.playground.audio
             }
         }
 
+        private void OnTriggerEnter(Collider other)
+        {
+            if (other.CompareTag("Net"))
+            {
+                PlayNetCollisionSound();
+            }
+        }
+
         public void OnCatchBall(Vector3 ballVelocity)
         {
             PlayCatchSound(ballVelocity.magnitude);
@@ -97,9 +105,22 @@ namespace starskyproductions.playground.audio
             // Select a random clip from the net collision pool.
             AudioClip selectedClip = GetRandomClip(_netCollisionClips);
 
+            // Set the clip and adjust volume.
+            _audioSource.clip = selectedClip;
+            _audioSource.volume *= 0.5f; // Reduce volume by 33%
+
             // Play the net collision sound with default pitch.
             _audioSource.pitch = 1.0f;
-            _audioSource.PlayOneShot(selectedClip);
+            _audioSource.Play();
+
+            // Restore original volume after the clip duration.
+            StartCoroutine(RestoreVolumeAfterClip(selectedClip.length));
+        }
+
+        private IEnumerator RestoreVolumeAfterClip(float clipLength)
+        {
+            yield return new WaitForSeconds(clipLength);
+            _audioSource.volume /= 0.5f; // Restore the original volume
         }
 
         private void PlayCatchSound(float velocity)
