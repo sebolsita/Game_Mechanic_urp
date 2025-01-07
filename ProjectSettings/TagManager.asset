@@ -3,7 +3,23 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - SamplesInfoPanel
+  - QDSUIBorderlessButton
+  - QDSUIIcon
+  - QDSUISharedThemeColor
+  - QDSUIToggleButton
+  - QDSUITextSecondaryColor
+  - QDSUITooltip
+  - QDSUISecondaryButton
+  - QDSUIToggleBorderlessButton
+  - Locomotion
+  - PassThrough
+  - PassThroughButton
+  - LocoButton
+  - LocoText
+  - QDSUIAccentColor
+  - Net
   layers:
   - Default
   - TransparentFX
