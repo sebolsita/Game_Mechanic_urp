@@ -20,6 +20,10 @@ TagManager:
   - LocoText
   - QDSUIAccentColor
   - Net
+  - 3score
+  - 1score
+  - 2score
+  - Ball
   layers:
   - Default
   - TransparentFX
