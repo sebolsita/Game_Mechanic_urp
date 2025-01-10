@@ -80,5 +80,25 @@ namespace starskyproductions.playground
         {
             if (_scoreText != null) _scoreText.text = $"Score: {newScore}";
         }
+
+        public void ResetScore()
+        {
+            _currentScore = 0;
+            Debug.Log("Score has been reset.");
+            OnScoreUpdated.Invoke(_currentScore);
+
+            // Vibrate both controllers (Oculus example)
+            OVRInput.SetControllerVibration(0.5f, 0.5f, OVRInput.Controller.LTouch); // Left controller
+            OVRInput.SetControllerVibration(0.5f, 0.5f, OVRInput.Controller.RTouch); // Right controller
+
+            Invoke(nameof(StopHaptics), 0.1f); // Stop vibration after 0.1 seconds
+        }
+
+        private void StopHaptics()
+        {
+            // Stop vibration on both controllers
+            OVRInput.SetControllerVibration(0, 0, OVRInput.Controller.LTouch);
+            OVRInput.SetControllerVibration(0, 0, OVRInput.Controller.RTouch);
+        }
     }
 }
