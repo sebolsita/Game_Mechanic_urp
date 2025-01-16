@@ -6,7 +6,7 @@ namespace starskyproductions.playground
 {
     public class BasketballScoringSystem : MonoBehaviour
     {
-        [SerializeField] private TextMeshProUGUI _scoreText; // Score display TMP object
+        [SerializeField] private TextMeshPro _scoreText; // Score display TMP object
         public UnityEvent<int> OnScoreUpdated;
 
         private int _currentScore;

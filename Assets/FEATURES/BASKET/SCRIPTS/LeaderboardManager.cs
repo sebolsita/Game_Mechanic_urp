@@ -6,7 +6,7 @@ public class LeaderboardManager : MonoBehaviour
 {
     [Header("Leaderboard Settings")]
     [Tooltip("TextMeshPro object for displaying the leaderboard.")]
-    [SerializeField] private TextMeshProUGUI leaderboardTMP;
+    [SerializeField] private TextMeshPro leaderboardTMP;
 
     [Tooltip("Maximum number of scores to display.")]
     [SerializeField] private int maxEntries = 8;

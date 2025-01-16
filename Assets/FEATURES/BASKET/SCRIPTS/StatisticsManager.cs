@@ -11,16 +11,16 @@ namespace starskyproductions.playground
         #region PUBLIC PROPERTIES
         [Header("Statistics Settings")]
         [Tooltip("TMP object for displaying current streak.")]
-        [SerializeField] private TextMeshPro streakTMP;
+        [SerializeField] private TextMeshProUGUI streakTMP;
 
         [Tooltip("TMP object for displaying highest streak.")]
-        [SerializeField] private TextMeshPro highestStreakTMP;
+        [SerializeField] private TextMeshProUGUI highestStreakTMP;
 
         [Tooltip("TMP object for displaying total shots.")]
-        [SerializeField] private TextMeshPro totalShotsTMP;
+        [SerializeField] private TextMeshProUGUI totalShotsTMP;
 
         [Tooltip("TMP object for displaying average time between shots.")]
-        [SerializeField] private TextMeshPro avgTimeTMP;
+        [SerializeField] private TextMeshProUGUI avgTimeTMP;
         #endregion
 
         #region PRIVATE FIELDS

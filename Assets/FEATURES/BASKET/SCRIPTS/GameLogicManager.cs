@@ -18,9 +18,9 @@ namespace starskyproductions.playground
 
         [Header("UI Elements")]
         [Tooltip("TMP for displaying countdowns, streaks, and messages.")]
-        [SerializeField] private TextMeshProUGUI gameMessageTMP;
+        [SerializeField] private TextMeshPro gameMessageTMP;
         [Tooltip("TMP for the timer.")]
-        [SerializeField] private TextMeshProUGUI timerTMP;
+        [SerializeField] private TextMeshPro timerTMP;
 
         [Header("Audio")]
         [Tooltip("Sound for each countdown number.")]
