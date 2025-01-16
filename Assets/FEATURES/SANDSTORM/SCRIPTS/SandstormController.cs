@@ -28,25 +28,29 @@ public class SandstormController : MonoBehaviour
     [Tooltip("TextMeshPro object to display the current state.")]
     [SerializeField] private TMP_Text stateDisplay;
 
-    private enum SandstormState { Off, On, Random }
-    private SandstormState currentState = SandstormState.Off;
-    private bool isSandstormActive = false;
+    private enum SandstormState { On, Off, Random }
+    private SandstormState currentState = SandstormState.On;
 
     private void Start()
     {
         UpdateStateDisplay();
-        if (currentState == SandstormState.Random)
+
+        if (currentState == SandstormState.On)
+        {
+            StartCoroutine(InitializeSystemsSmoothly());
+        }
+        else if (currentState == SandstormState.Random)
         {
             StartCoroutine(SandstormRoutine());
         }
     }
 
     /// <summary>
-    /// Toggles the sandstorm state between Off, On, and Random.
+    /// Toggles the sandstorm state between On, Off, and Random.
     /// </summary>
     public void ToggleSandstormState()
     {
-        // Cycle through states: Off -> On -> Random -> Off
+        // Cycle through states: On -> Off -> Random -> On
         currentState = (SandstormState)(((int)currentState + 1) % 3);
         UpdateStateDisplay();
 
@@ -144,14 +148,38 @@ public class SandstormController : MonoBehaviour
     }
 
     /// <summary>
+    /// Smoothly initializes the systems at startup.
+    /// </summary>
+    private IEnumerator InitializeSystemsSmoothly()
+    {
+        foreach (var audioSource in audioSources)
+        {
+            if (audioSource != null)
+            {
+                StartCoroutine(FadeInAudio(audioSource));
+            }
+        }
+
+        foreach (var particleSystem in particleSystems)
+        {
+            if (particleSystem != null)
+            {
+                particleSystem.Play();
+            }
+        }
+
+        yield return null; // Ensure systems start smoothly
+    }
+
+    /// <summary>
     /// Gradually fades in the volume of an audio source.
     /// </summary>
     private IEnumerator FadeInAudio(AudioSource audioSource)
     {
+        float targetVolume = audioSource.volume > 0 ? audioSource.volume : 1f; // Default to 1 if not set
         audioSource.volume = 0;
         audioSource.Play();
 
-        float targetVolume = audioSource.volume; // Get the original volume value
         float elapsedTime = 0;
 
         while (elapsedTime < fadeDuration)
