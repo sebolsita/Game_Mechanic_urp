@@ -77,7 +77,7 @@ public class SandstormController : MonoBehaviour
     {
         if (stateDisplay != null)
         {
-            stateDisplay.text = $"Sandstorm State: {currentState}";
+            stateDisplay.text = $"{currentState}";
         }
     }
 

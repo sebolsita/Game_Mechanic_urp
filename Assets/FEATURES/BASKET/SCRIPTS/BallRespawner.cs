@@ -1,7 +1,7 @@
 using UnityEngine;
 using TMPro;
 
-namespace starskyproductions.playground
+namespace starskyproductions.playground.ballrespawn
 {
     /// <summary>
     /// Handles ball respawn, inactivity management, and feedback messages.

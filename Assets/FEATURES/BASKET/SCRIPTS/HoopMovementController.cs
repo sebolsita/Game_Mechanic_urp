@@ -48,7 +48,7 @@ public class HoopMovementController : MonoBehaviour
         if (heightDisplay != null)
         {
             // Display the current Y position of the hoop as height
-            heightDisplay.text = $"Height: {transform.position.y:F2}m";
+            heightDisplay.text = $"{transform.position.y:F2}m";
         }
     }
 }

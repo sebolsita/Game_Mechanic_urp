@@ -38,7 +38,7 @@ public class GameModeSwitcher : MonoBehaviour
     {
         if (modeDisplay != null)
         {
-            modeDisplay.text = $"Mode: {currentGameMode}";
+            modeDisplay.text = $"{currentGameMode}";
         }
     }
 

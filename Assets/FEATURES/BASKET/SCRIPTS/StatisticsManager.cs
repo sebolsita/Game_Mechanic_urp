@@ -1,7 +1,7 @@
 using UnityEngine;
 using TMPro;
 
-namespace starskyproductions.playground
+namespace starskyproductions.playground.stat
 {
     /// <summary>
     /// Tracks and displays game statistics, including streaks, total shots, and average time between shots.
@@ -91,13 +91,13 @@ namespace starskyproductions.playground
         /// </summary>
         private void UpdateDisplays()
         {
-            if (streakTMP != null) streakTMP.text = $"Streak: {currentStreak}";
-            if (highestStreakTMP != null) highestStreakTMP.text = $"Highest Streak: {highestStreak}";
-            if (totalShotsTMP != null) totalShotsTMP.text = $"Total Shots: {totalShots}";
+            if (streakTMP != null) streakTMP.text = $"{currentStreak}";
+            if (highestStreakTMP != null) highestStreakTMP.text = $"{highestStreak}";
+            if (totalShotsTMP != null) totalShotsTMP.text = $"{totalShots}";
             if (avgTimeTMP != null)
             {
                 float avgTime = totalShots > 1 ? totalShotTime / (totalShots - 1) : 0f; // Avoid divide by zero
-                avgTimeTMP.text = $"Avg Time: {avgTime:F2}s";
+                avgTimeTMP.text = $"{avgTime:F2}s";
             }
         }
         #endregion

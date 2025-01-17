@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using TMPro;
 
-namespace starskyproductions.playground
+namespace starskyproductions.playground.scoring
 {
     public class BasketballScoringSystem : MonoBehaviour
     {
@@ -78,7 +78,7 @@ namespace starskyproductions.playground
 
         private void UpdateScoreDisplay(int newScore)
         {
-            if (_scoreText != null) _scoreText.text = $"Score: {newScore}";
+            if (_scoreText != null) _scoreText.text = $"{newScore}";
         }
 
         public void ResetScore()
