@@ -7,6 +7,8 @@ namespace starskyproductions.playground.scoring
     public class BasketballScoringSystem : MonoBehaviour
     {
         [SerializeField] private TextMeshPro _scoreText; // Score display TMP object
+        [SerializeField] private GameLogicManager gameLogicManager; // Reference to GameLogicManager
+
         public UnityEvent<int> OnScoreUpdated;
 
         private int _currentScore;
@@ -14,13 +16,29 @@ namespace starskyproductions.playground.scoring
 
         private bool _scoreExited; // Tracks if ball exited "score_collider"
 
+        // Reference to the GameLogicManager
+        private GameLogicManager _gameLogicManager;
+
         private void Awake()
         {
+            // Find the GameLogicManager in the scene
+            _gameLogicManager = FindObjectOfType<GameLogicManager>();
+            if (_gameLogicManager == null)
+            {
+                Debug.LogError("GameLogicManager not found in the scene. Scoring will be disabled.");
+            }
+
             ZoneDetector.OnPlayerEnterZone += HandlePlayerEnterZone; // Subscribe to zone entry events
             HoopColliderDetector.OnBallHoopEvent += HandleBallHoopEvent;
 
             OnScoreUpdated ??= new UnityEvent<int>();
             OnScoreUpdated.AddListener(UpdateScoreDisplay);
+
+            gameLogicManager = FindObjectOfType<GameLogicManager>();
+            if (gameLogicManager == null)
+            {
+                Debug.LogError("GameLogicManager not found in the scene.");
+            }
         }
 
         private void OnDestroy()
@@ -65,6 +83,13 @@ namespace starskyproductions.playground.scoring
 
         private void AwardPoints()
         {
+            // Check if scoring is enabled in the GameLogicManager
+            if (_gameLogicManager != null && !_gameLogicManager.IsScoreEnabled())
+            {
+                Debug.Log("Scoring is currently disabled. No points awarded.");
+                return;
+            }
+
             Debug.Log($"Awarding points based on last entered zone: Zone {_lastZoneEntered}");
             AddScore(_lastZoneEntered);
         }
@@ -74,6 +99,12 @@ namespace starskyproductions.playground.scoring
             _currentScore += points;
             Debug.Log($"Points added: {points}, Total score: {_currentScore}");
             OnScoreUpdated.Invoke(_currentScore);
+
+            // Notify the GameLogicManager about the score update
+            if (gameLogicManager != null)
+            {
+                gameLogicManager.UpdateScoreDisplay(_currentScore);
+            }
         }
 
         private void UpdateScoreDisplay(int newScore)

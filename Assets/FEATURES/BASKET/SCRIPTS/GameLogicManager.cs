@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
 using System.Collections;
+using starskyproductions.playground.scoring;
 
 namespace starskyproductions.playground
 {
@@ -13,8 +14,8 @@ namespace starskyproductions.playground
 
         #region PUBLIC PROPERTIES
         [Header("Game Settings")]
-        [Tooltip("Game duration in seconds (3 minutes = 180 seconds).")]
-        [SerializeField] private int gameDuration = 180;
+        [Tooltip("Game duration in seconds (1 minute = 60 seconds).")]
+        [SerializeField] private int gameDuration = 60;
 
         [Header("UI Elements")]
         [Tooltip("TMP for displaying countdowns, streaks, and messages.")]
@@ -23,7 +24,7 @@ namespace starskyproductions.playground
         [SerializeField] private TextMeshPro timerTMP;
 
         [Header("Audio")]
-        [Tooltip("Sound for each countdown number.")]
+        [Tooltip("Sound for the game start countdown.")]
         [SerializeField] private AudioClip countdownSound;
         [Tooltip("Sound for the game start.")]
         [SerializeField] private AudioClip startSound;
@@ -39,10 +40,16 @@ namespace starskyproductions.playground
         [SerializeField] private Color warningColor = Color.yellow;
         [Tooltip("Timer color for the last 3 seconds.")]
         [SerializeField] private Color dangerColor = Color.red;
+        [Tooltip("Default message color.")]
+        [SerializeField] private Color defaultMessageColor = new Color32(35, 178, 31, 255); // Hex: #23B21F
+        [Tooltip("Color for 'GAME ABORTED' message.")]
+        [SerializeField] private Color abortColor = Color.red;
         #endregion
 
         private GameState currentState = GameState.Paused;
         private int currentTime;
+        private bool scoreEnabled = false;
+        private bool isPaused = false; // Tracks whether the game is paused
 
         #region UNITY METHODS
         private void Start()
@@ -53,12 +60,14 @@ namespace starskyproductions.playground
 
         #region PUBLIC METHODS
         /// <summary>
-        /// Starts the game with a countdown.
+        /// Starts the game with the proper message and countdown sequence.
         /// </summary>
         public void StartGame()
         {
+            if (currentState != GameState.Paused) return;
+
             currentState = GameState.Paused;
-            StartAmbientSound();
+            DisplayMessage("GET READY", defaultMessageColor);
             StartCoroutine(CountdownAndStart());
         }
 
@@ -69,13 +78,17 @@ namespace starskyproductions.playground
         {
             if (currentState == GameState.Running)
             {
+                isPaused = true;
                 currentState = GameState.Paused;
-                DisplayMessage("Game Paused");
+                DisplayMessage("Game Paused", defaultMessageColor);
+                PauseAmbientMusic();
             }
-            else if (currentState == GameState.Paused)
+            else if (currentState == GameState.Paused && isPaused)
             {
+                isPaused = false;
                 currentState = GameState.Running;
-                DisplayMessage("Game Resumed");
+                DisplayMessage("Game Resumed", defaultMessageColor);
+                ResumeAmbientMusic();
             }
         }
 
@@ -84,54 +97,78 @@ namespace starskyproductions.playground
         /// </summary>
         public void AbortGame()
         {
-            ResetGame();
-            DisplayMessage("Game Aborted");
+            StopAmbientMusic();
+            currentState = GameState.Paused;
+            scoreEnabled = false;
+            StartCoroutine(DisplayAbortMessage());
         }
         #endregion
 
         #region PRIVATE METHODS
         /// <summary>
-        /// Resets the game state.
+        /// Resets the game to its initial state.
         /// </summary>
         private void ResetGame()
         {
             currentState = GameState.Paused;
             currentTime = gameDuration;
+            scoreEnabled = false;
+
             UpdateTimerDisplay();
-            DisplayMessage("Ready");
+            timerTMP.color = defaultMessageColor; // Reset timer color
+            DisplayMessage("TIMED GAME", defaultMessageColor);
+
+            // Notify the scoring system to reset the score
+            var scoringSystem = FindObjectOfType<BasketballScoringSystem>();
+            if (scoringSystem != null)
+            {
+                scoringSystem.ResetScore();
+            }
         }
 
         /// <summary>
-        /// Handles the countdown and starts the game.
+        /// Plays the countdown sequence and starts the game.
         /// </summary>
         private IEnumerator CountdownAndStart()
         {
-            for (int i = 5; i > 0; i--)
+            if (audioSource != null && countdownSound != null)
             {
-                DisplayMessage(i.ToString());
-                PlaySound(countdownSound);
-                yield return new WaitForSeconds(1f);
+                audioSource.PlayOneShot(countdownSound); // Play countdown audio
             }
 
-            DisplayMessage("START");
-            PlaySound(startSound);
+            yield return new WaitForSeconds(2f); // Wait for "GET READY"
+            DisplayMessage("3", dangerColor);
             yield return new WaitForSeconds(1f);
 
-            currentState = GameState.Running;
-            StartCoroutine(GameTimer());
+            DisplayMessage("2", warningColor);
+            yield return new WaitForSeconds(1f);
+
+            DisplayMessage("1", Color.green);
+            yield return new WaitForSeconds(1f);
+
+            StartGameplay();
         }
 
         /// <summary>
-        /// Plays the ambient sound.
+        /// Begins gameplay.
         /// </summary>
-        private void StartAmbientSound()
+        private void StartGameplay()
         {
-            if (audioSource != null && ambientSound != null)
-            {
-                audioSource.clip = ambientSound;
-                audioSource.loop = true;
-                audioSource.Play();
-            }
+            currentState = GameState.Running;
+            scoreEnabled = true; // Enable scoring
+            DisplayMessage($"SCORE: 0", defaultMessageColor);
+            StartCoroutine(GameTimer());
+
+            // Start ambient sound
+            StartAmbientMusic();
+        }
+
+        /// <summary>
+        /// Returns whether scoring is currently enabled.
+        /// </summary>
+        public bool IsScoreEnabled()
+        {
+            return scoreEnabled;
         }
 
         /// <summary>
@@ -139,12 +176,14 @@ namespace starskyproductions.playground
         /// </summary>
         private IEnumerator GameTimer()
         {
+            currentTime = gameDuration;
+
             while (currentTime > 0 && currentState == GameState.Running)
             {
+                if (isPaused) yield return null; // Wait while paused
                 yield return new WaitForSeconds(1f);
-                currentTime--;
 
-                // Flash timer color for the last 10 seconds
+                currentTime--;
                 if (currentTime <= 10)
                 {
                     timerTMP.color = (currentTime <= 3) ? dangerColor : warningColor;
@@ -160,23 +199,27 @@ namespace starskyproductions.playground
         }
 
         /// <summary>
-        /// Ends the game and plays the end sound.
+        /// Ends the game and resets to the initial state.
         /// </summary>
         private void EndGame()
         {
             currentState = GameState.GameOver;
-            DisplayMessage("Game Over");
+            scoreEnabled = false; // Disable scoring
+            DisplayMessage("GAME OVER", dangerColor);
 
-            // Stop ambient sound
-            if (audioSource != null)
-            {
-                audioSource.Stop();
-            }
-
-            // Play end sound
+            StopAmbientMusic();
             PlaySound(endSound);
 
-            SaveScore();
+            StartCoroutine(ShowGameOverAndReset());
+        }
+
+        /// <summary>
+        /// Displays "GAME OVER" for 2 seconds, then resets to "TIMED GAME."
+        /// </summary>
+        private IEnumerator ShowGameOverAndReset()
+        {
+            yield return new WaitForSeconds(2f);
+            ResetGame();
         }
 
         /// <summary>
@@ -190,13 +233,25 @@ namespace starskyproductions.playground
         }
 
         /// <summary>
-        /// Displays a message on the shared TMP.
+        /// Displays a message with a specific color.
         /// </summary>
-        private void DisplayMessage(string message)
+        private void DisplayMessage(string message, Color color)
         {
             if (gameMessageTMP != null)
             {
                 gameMessageTMP.text = message;
+                gameMessageTMP.color = color;
+            }
+        }
+
+        /// <summary>
+        /// Updates the score message dynamically.
+        /// </summary>
+        public void UpdateScoreDisplay(int score)
+        {
+            if (currentState == GameState.Running)
+            {
+                DisplayMessage($"SCORE: {score}", defaultMessageColor);
             }
         }
 
@@ -212,12 +267,59 @@ namespace starskyproductions.playground
         }
 
         /// <summary>
-        /// Saves the current score (placeholder for leaderboard integration).
+        /// Starts the ambient music.
         /// </summary>
-        private void SaveScore()
+        private void StartAmbientMusic()
         {
-            // Placeholder for leaderboard logic
-            Debug.Log($"Score saved. Timer reached zero.");
+            if (audioSource != null && ambientSound != null)
+            {
+                audioSource.clip = ambientSound;
+                audioSource.loop = true;
+                audioSource.Play();
+            }
+        }
+
+        /// <summary>
+        /// Stops the ambient music.
+        /// </summary>
+        private void StopAmbientMusic()
+        {
+            if (audioSource != null && audioSource.isPlaying)
+            {
+                audioSource.Stop();
+            }
+        }
+
+        /// <summary>
+        /// Pauses the ambient music.
+        /// </summary>
+        private void PauseAmbientMusic()
+        {
+            if (audioSource != null && audioSource.isPlaying)
+            {
+                audioSource.Pause();
+            }
+        }
+
+        /// <summary>
+        /// Resumes the ambient music.
+        /// </summary>
+        private void ResumeAmbientMusic()
+        {
+            if (audioSource != null)
+            {
+                audioSource.UnPause();
+            }
+        }
+
+        /// <summary>
+        /// Displays the "GAME ABORTED" message for 2 seconds, then resets the game.
+        /// </summary>
+        private IEnumerator DisplayAbortMessage()
+        {
+            DisplayMessage("GAME ABORTED", abortColor);
+            yield return new WaitForSeconds(2f);
+            ResetGame();
         }
         #endregion
     }
