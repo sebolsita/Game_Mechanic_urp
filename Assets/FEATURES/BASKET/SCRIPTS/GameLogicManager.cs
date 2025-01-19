@@ -57,6 +57,7 @@ namespace starskyproductions.playground
 
         [SerializeField]
         private GameObject grabObject; // Assign this in the inspector
+        [SerializeField] private BasketballScoringSystem basketballScoringSystem;
 
 
 
@@ -72,6 +73,19 @@ namespace starskyproductions.playground
                 Debug.LogError("No basketball found in the scene! Please add a Rigidbody to the basketball.");
             }
         }
+
+        private void Awake()
+        {
+            if (basketballScoringSystem == null)
+            {
+                basketballScoringSystem = FindObjectOfType<BasketballScoringSystem>();
+                if (basketballScoringSystem == null)
+                {
+                    Debug.LogError("[GameLogicManager] BasketballScoringSystem not found in the scene!");
+                }
+            }
+        }
+
 
         #endregion
 
@@ -293,6 +307,7 @@ namespace starskyproductions.playground
 
 
         /// <summary>
+        /// <summary>
         /// Ends the game and resets to the initial state.
         /// </summary>
         private void EndGame()
@@ -304,8 +319,20 @@ namespace starskyproductions.playground
             StopAmbientMusic();
             PlaySound(endSound);
 
+            // Submit the final score to the leaderboard
+            if (basketballScoringSystem != null)
+            {
+                basketballScoringSystem.SubmitScoreToLeaderboard();
+                Debug.Log("[GameLogicManager] Final score submitted to leaderboard.");
+            }
+            else
+            {
+                Debug.LogError("[GameLogicManager] BasketballScoringSystem reference is missing!");
+            }
+
             StartCoroutine(ShowGameOverAndReset());
         }
+
 
         /// <summary>
         /// Displays "GAME OVER" for 2 seconds, then resets to "TIMED GAME."

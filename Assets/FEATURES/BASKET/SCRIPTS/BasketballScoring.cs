@@ -25,10 +25,6 @@ namespace starskyproductions.playground.scoring
                 {
                     Debug.LogError("[BasketballScoringSystem] LeaderboardManager not found in the scene!");
                 }
-                else
-                {
-                    Debug.Log("[BasketballScoringSystem] LeaderboardManager dynamically assigned.");
-                }
             }
 
             // Subscribe to relevant events
@@ -90,23 +86,29 @@ namespace starskyproductions.playground.scoring
             Debug.Log($"[BasketballScoringSystem] Points added: {points}, Total score: {_currentScore}");
             OnScoreUpdated.Invoke(_currentScore);
 
+            // Notify the GameLogicManager to update the score display
+            if (gameLogicManager != null)
+            {
+                gameLogicManager.UpdateScoreDisplay(_currentScore);
+                Debug.Log("[BasketballScoringSystem] GameLogicManager score display updated.");
+            }
+        }
+
+        public void SubmitScoreToLeaderboard()
+        {
             if (leaderboardManager != null)
             {
                 leaderboardManager.AddScore(_currentScore);
-                Debug.Log("[BasketballScoringSystem] Score sent to LeaderboardManager.");
-            }
-            else
-            {
-                Debug.LogError("[BasketballScoringSystem] LeaderboardManager reference is missing!");
+                Debug.Log($"[BasketballScoringSystem] Final score submitted to LeaderboardManager: {_currentScore}");
             }
         }
 
         private void UpdateScoreDisplay(int newScore)
         {
-            if (_scoreText != null)
+            if (gameLogicManager != null)
             {
-                _scoreText.text = $"{newScore}";
-                Debug.Log($"[BasketballScoringSystem] Score display updated: {newScore}");
+                gameLogicManager.UpdateScoreDisplay(newScore); // Update score on the message screen (gameMessageTMP)
+                Debug.Log($"[BasketballScoringSystem] Score updated on GameLogicManager: {newScore}");
             }
         }
 
