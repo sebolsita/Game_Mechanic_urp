@@ -118,12 +118,27 @@ namespace starskyproductions.playground.scoring
             Debug.Log("Score has been reset.");
             OnScoreUpdated.Invoke(_currentScore);
 
+            // Display the reset score immediately
+            if (_scoreText != null)
+            {
+                _scoreText.text = "0";
+            }
+
             // Vibrate both controllers (Oculus example)
             OVRInput.SetControllerVibration(0.5f, 0.5f, OVRInput.Controller.LTouch); // Left controller
             OVRInput.SetControllerVibration(0.5f, 0.5f, OVRInput.Controller.RTouch); // Right controller
 
             Invoke(nameof(StopHaptics), 0.1f); // Stop vibration after 0.1 seconds
         }
+
+        /// <summary>
+        /// Returns the current score.
+        /// </summary>
+        public int GetCurrentScore()
+        {
+            return _currentScore;
+        }
+
 
         private void StopHaptics()
         {

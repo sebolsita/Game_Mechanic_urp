@@ -50,12 +50,25 @@ namespace starskyproductions.playground
         private int currentTime;
         private bool scoreEnabled = false;
         private bool isPaused = false; // Tracks whether the game is paused
+        [Header("Basketball Settings")]
+        [Tooltip("Assign the basketball Rigidbody here.")]
+        [SerializeField] private Rigidbody basketballRigidbody;
+
+
 
         #region UNITY METHODS
         private void Start()
         {
             ResetGame();
+
+            // Automatically find the basketball
+            basketballRigidbody = FindObjectOfType<Rigidbody>();
+            if (basketballRigidbody == null)
+            {
+                Debug.LogError("No basketball found in the scene! Please add a Rigidbody to the basketball.");
+            }
         }
+
         #endregion
 
         #region PUBLIC METHODS
@@ -64,7 +77,11 @@ namespace starskyproductions.playground
         /// </summary>
         public void StartGame()
         {
-            if (currentState != GameState.Paused) return;
+            if (currentState == GameState.Running || isPaused)
+            {
+                Debug.Log("Cannot start a new game while running or paused.");
+                return;
+            }
 
             currentState = GameState.Paused;
             DisplayMessage("GET READY", defaultMessageColor);
@@ -81,16 +98,45 @@ namespace starskyproductions.playground
                 isPaused = true;
                 currentState = GameState.Paused;
                 DisplayMessage("Game Paused", defaultMessageColor);
-                PauseAmbientMusic();
+                Debug.Log("Game Paused");
+
+                // Freeze the basketball
+                FreezeBasketball(true);
             }
             else if (currentState == GameState.Paused && isPaused)
             {
                 isPaused = false;
                 currentState = GameState.Running;
-                DisplayMessage("Game Resumed", defaultMessageColor);
-                ResumeAmbientMusic();
+                StartCoroutine(DisplayTemporaryMessage("Game Resumed", defaultMessageColor, 2f));
+                Debug.Log("Game Resumed");
+
+                // Unfreeze the basketball
+                FreezeBasketball(false);
             }
         }
+
+
+        private void FreezeBasketball(bool freeze)
+        {
+            if (basketballRigidbody != null)
+            {
+                basketballRigidbody.isKinematic = freeze;
+                if (freeze)
+                {
+                    basketballRigidbody.velocity = Vector3.zero;
+                    basketballRigidbody.angularVelocity = Vector3.zero;
+                }
+            }
+            else
+            {
+                Debug.LogWarning("Basketball Rigidbody not found. Cannot freeze/unfreeze.");
+            }
+        }
+
+
+
+
+
 
         /// <summary>
         /// Aborts the current game.
@@ -99,9 +145,16 @@ namespace starskyproductions.playground
         {
             StopAmbientMusic();
             currentState = GameState.Paused;
+            isPaused = false;
             scoreEnabled = false;
-            StartCoroutine(DisplayAbortMessage());
+
+            // Reset game state
+            ResetGame();
+
+            // Display "GAME ABORTED" message for 2 seconds
+            StartCoroutine(DisplayTemporaryMessage("GAME ABORTED", abortColor, 2f));
         }
+
         #endregion
 
         #region PRIVATE METHODS
@@ -118,6 +171,13 @@ namespace starskyproductions.playground
             timerTMP.color = defaultMessageColor; // Reset timer color
             DisplayMessage("TIMED GAME", defaultMessageColor);
 
+            // Ensure basketball is unfrozen (non-kinematic)
+            var basketball = FindObjectOfType<Rigidbody>();
+            if (basketball != null)
+            {
+                basketball.isKinematic = true; // Make sure it's frozen at reset
+            }
+
             // Notify the scoring system to reset the score
             var scoringSystem = FindObjectOfType<BasketballScoringSystem>();
             if (scoringSystem != null)
@@ -125,7 +185,6 @@ namespace starskyproductions.playground
                 scoringSystem.ResetScore();
             }
         }
-
         /// <summary>
         /// Plays the countdown sequence and starts the game.
         /// </summary>
@@ -176,27 +235,36 @@ namespace starskyproductions.playground
         /// </summary>
         private IEnumerator GameTimer()
         {
-            currentTime = gameDuration;
-
-            while (currentTime > 0 && currentState == GameState.Running)
+            while (currentTime > 0)
             {
-                if (isPaused) yield return null; // Wait while paused
-                yield return new WaitForSeconds(1f);
-
-                currentTime--;
-                if (currentTime <= 10)
+                if (!isPaused) // Only decrement time when not paused
                 {
-                    timerTMP.color = (currentTime <= 3) ? dangerColor : warningColor;
-                }
+                    yield return new WaitForSeconds(1f);
+                    currentTime--;
 
-                UpdateTimerDisplay();
+                    // Update the timer display and color for the last seconds
+                    if (currentTime <= 10)
+                    {
+                        timerTMP.color = (currentTime <= 3) ? dangerColor : warningColor;
+                    }
+
+                    UpdateTimerDisplay();
+                }
+                else
+                {
+                    yield return null; // Wait until unpaused
+                }
             }
 
-            if (currentTime == 0)
+            if (currentTime <= 0 && currentState == GameState.Running)
             {
                 EndGame();
             }
         }
+
+
+
+
 
         /// <summary>
         /// Ends the game and resets to the initial state.
@@ -320,6 +388,30 @@ namespace starskyproductions.playground
             DisplayMessage("GAME ABORTED", abortColor);
             yield return new WaitForSeconds(2f);
             ResetGame();
+        }
+
+        /// <summary>
+        /// Displays a temporary message for a specified duration, then reverts to the timer or default message.
+        /// </summary>
+        private IEnumerator DisplayTemporaryMessage(string message, Color color, float duration)
+        {
+            if (gameMessageTMP != null)
+            {
+                gameMessageTMP.text = message;
+                gameMessageTMP.color = color;
+            }
+
+            yield return new WaitForSeconds(duration);
+
+            // Revert to showing the timer or default message
+            if (currentState == GameState.Running)
+            {
+                DisplayMessage($"SCORE: {FindObjectOfType<BasketballScoringSystem>()?  .GetCurrentScore() ?? 0}", defaultMessageColor);
+            }
+            else
+            {
+                DisplayMessage("TIMED GAME", defaultMessageColor);
+            }
         }
         #endregion
     }
