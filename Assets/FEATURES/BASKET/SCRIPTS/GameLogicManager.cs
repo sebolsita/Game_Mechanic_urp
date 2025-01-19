@@ -53,6 +53,7 @@ namespace starskyproductions.playground
         [Header("Basketball Settings")]
         [Tooltip("Assign the basketball Rigidbody here.")]
         [SerializeField] private Rigidbody basketballRigidbody;
+        private Coroutine timerCoroutine; // To track the running timer coroutine
 
 
 
@@ -98,20 +99,16 @@ namespace starskyproductions.playground
                 isPaused = true;
                 currentState = GameState.Paused;
                 DisplayMessage("Game Paused", defaultMessageColor);
-                Debug.Log("Game Paused");
-
-                // Freeze the basketball
-                FreezeBasketball(true);
+                PauseAmbientMusic();
+                FreezeBasketball(true); // Freeze the basketball
             }
             else if (currentState == GameState.Paused && isPaused)
             {
                 isPaused = false;
                 currentState = GameState.Running;
                 StartCoroutine(DisplayTemporaryMessage("Game Resumed", defaultMessageColor, 2f));
-                Debug.Log("Game Resumed");
-
-                // Unfreeze the basketball
-                FreezeBasketball(false);
+                ResumeAmbientMusic();
+                FreezeBasketball(false); // Unfreeze the basketball
             }
         }
 
@@ -121,17 +118,15 @@ namespace starskyproductions.playground
             if (basketballRigidbody != null)
             {
                 basketballRigidbody.isKinematic = freeze;
+
                 if (freeze)
                 {
                     basketballRigidbody.velocity = Vector3.zero;
                     basketballRigidbody.angularVelocity = Vector3.zero;
                 }
             }
-            else
-            {
-                Debug.LogWarning("Basketball Rigidbody not found. Cannot freeze/unfreeze.");
-            }
         }
+
 
 
 
@@ -148,12 +143,21 @@ namespace starskyproductions.playground
             isPaused = false;
             scoreEnabled = false;
 
+            // Stop the timer coroutine
+            if (timerCoroutine != null)
+            {
+                StopCoroutine(timerCoroutine);
+                timerCoroutine = null;
+            }
+
             // Reset game state
             ResetGame();
 
-            // Display "GAME ABORTED" message for 2 seconds
+            // Display "GAME ABORTED" for 2 seconds
             StartCoroutine(DisplayTemporaryMessage("GAME ABORTED", abortColor, 2f));
         }
+
+
 
         #endregion
 
@@ -165,26 +169,36 @@ namespace starskyproductions.playground
         {
             currentState = GameState.Paused;
             currentTime = gameDuration;
+            isPaused = false;
             scoreEnabled = false;
 
-            UpdateTimerDisplay();
-            timerTMP.color = defaultMessageColor; // Reset timer color
-            DisplayMessage("TIMED GAME", defaultMessageColor);
-
-            // Ensure basketball is unfrozen (non-kinematic)
-            var basketball = FindObjectOfType<Rigidbody>();
-            if (basketball != null)
+            // Stop the timer coroutine if it exists
+            if (timerCoroutine != null)
             {
-                basketball.isKinematic = true; // Make sure it's frozen at reset
+                StopCoroutine(timerCoroutine);
+                timerCoroutine = null;
             }
 
-            // Notify the scoring system to reset the score
+            // Reset timer display
+            timerTMP.color = defaultMessageColor;
+            UpdateTimerDisplay();
+
+            // Reset game message
+            DisplayMessage("TIMED GAME", defaultMessageColor);
+
+            // Unfreeze the basketball by default
+            FreezeBasketball(false);
+
+            // Reset score (if connected to scoring system)
             var scoringSystem = FindObjectOfType<BasketballScoringSystem>();
             if (scoringSystem != null)
             {
                 scoringSystem.ResetScore();
             }
         }
+
+
+
         /// <summary>
         /// Plays the countdown sequence and starts the game.
         /// </summary>
@@ -214,13 +228,17 @@ namespace starskyproductions.playground
         private void StartGameplay()
         {
             currentState = GameState.Running;
-            scoreEnabled = true; // Enable scoring
+            scoreEnabled = true;
             DisplayMessage($"SCORE: 0", defaultMessageColor);
-            StartCoroutine(GameTimer());
 
-            // Start ambient sound
+            if (timerCoroutine == null)
+            {
+                timerCoroutine = StartCoroutine(GameTimer());
+            }
+
             StartAmbientMusic();
         }
+
 
         /// <summary>
         /// Returns whether scoring is currently enabled.
