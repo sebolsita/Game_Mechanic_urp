@@ -21368,6 +21368,7 @@ MonoBehaviour:
   defaultMessageColor: {r: 0.13725491, g: 0.69803923, b: 0.12156863, a: 1}
   abortColor: {r: 1, g: 0, b: 0, a: 1}
   basketballRigidbody: {fileID: 8337542520113564041}
+  grabObject: {fileID: 894801383}
 --- !u!114 &527696004
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -33818,6 +33819,12 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1101303512}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &894801383 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 9129674390750217625, guid: ec658fb1a8797464c85fa0999bc4afbe,
+    type: 3}
+  m_PrefabInstance: {fileID: 6618700135584726097}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &899433002
 GameObject:
   m_ObjectHideFlags: 0
@@ -85802,7 +85809,7 @@ PrefabInstance:
     - target: {fileID: 1843618633962601322, guid: b2898320842440447baa0e31325a6156,
         type: 3}
       propertyPath: m_UseGravity
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1843618633962601322, guid: b2898320842440447baa0e31325a6156,
         type: 3}
@@ -89389,10 +89396,6 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 5851184114281693888}
-    - targetCorrespondingSourceObject: {fileID: 6029929497368292018, guid: ffe3be6b11cb93446bff4c254b6d9148,
-        type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 5851184114281693891}
     - targetCorrespondingSourceObject: {fileID: 6029929497368292022, guid: ffe3be6b11cb93446bff4c254b6d9148,
         type: 3}
       insertIndex: -1
@@ -89616,18 +89619,6 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
---- !u!114 &5851184114281693891
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 995046522}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 422e4fa7307243b4da3cfa7cbc51497c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!224 &5902296730523297551
 RectTransform:
   m_ObjectHideFlags: 0
@@ -92062,7 +92053,7 @@ PrefabInstance:
     - target: {fileID: 3777204529367672180, guid: ec658fb1a8797464c85fa0999bc4afbe,
         type: 3}
       propertyPath: m_CollisionDetection
-      value: 1
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 6307577489480265376, guid: ec658fb1a8797464c85fa0999bc4afbe,
         type: 3}

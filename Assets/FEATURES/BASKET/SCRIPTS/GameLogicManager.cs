@@ -55,6 +55,9 @@ namespace starskyproductions.playground
         [SerializeField] private Rigidbody basketballRigidbody;
         private Coroutine timerCoroutine; // To track the running timer coroutine
 
+        [SerializeField]
+        private GameObject grabObject; // Assign this in the inspector
+
 
 
         #region UNITY METHODS
@@ -100,7 +103,7 @@ namespace starskyproductions.playground
                 currentState = GameState.Paused;
                 DisplayMessage("Game Paused", defaultMessageColor);
                 PauseAmbientMusic();
-                FreezeBasketball(true); // Freeze the basketball
+                FreezeBasketball(true); // Disable grab object
             }
             else if (currentState == GameState.Paused && isPaused)
             {
@@ -108,24 +111,29 @@ namespace starskyproductions.playground
                 currentState = GameState.Running;
                 StartCoroutine(DisplayTemporaryMessage("Game Resumed", defaultMessageColor, 2f));
                 ResumeAmbientMusic();
-                FreezeBasketball(false); // Unfreeze the basketball
+                FreezeBasketball(false); // Enable grab object
             }
         }
+
+
+
+
 
 
         private void FreezeBasketball(bool freeze)
         {
-            if (basketballRigidbody != null)
+            if (grabObject != null)
             {
-                basketballRigidbody.isKinematic = freeze;
-
-                if (freeze)
-                {
-                    basketballRigidbody.velocity = Vector3.zero;
-                    basketballRigidbody.angularVelocity = Vector3.zero;
-                }
+                grabObject.SetActive(!freeze); // Enable/Disable based on the freeze state
+                Debug.Log($"Grab object {(freeze ? "disabled" : "enabled")}.");
+            }
+            else
+            {
+                Debug.LogWarning("Grab object is not assigned in the inspector!");
             }
         }
+
+
 
 
 
